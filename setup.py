@@ -11,5 +11,5 @@ setuptools.setup(
     description="Python Implementation of MarjaPussi.",
     long_description=long_description,
     packages=["marjapussi"],
-    python_requires='>=3.10',
+    python_requires='>=3.9',
 )
