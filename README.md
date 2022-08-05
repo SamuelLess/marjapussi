@@ -1,10 +1,11 @@
 # MarjaPussi
-
 Pyhton implementation of MarjaPussi.
 
-## Install
+## Installation
 ### Pip
+To install the most recent version you might have to uninstall any old versions.
 ```
+python -m pip install git+https://github.com/SamuelLess/marjapussi.git
 ```
 
 ## Usage
@@ -12,8 +13,9 @@ Pyhton implementation of MarjaPussi.
 ```
 from marjapussi.game import MarjaPussi
 
-game = MarjaPussi([Name1, Name2, Name3, Name4])
+game = MarjaPussi(['Name1', 'Name2', 'Name3', 'Name4'])
 ```
+
 ### Keyword Arguments
 - `log = [True | False | 'DEBUG')`: sets printlevel for `game.logger`.
 - `fancy = [True | False]`: enable color output using ANSI escape sequences
@@ -28,3 +30,7 @@ while not game.phase == "DONE":
     #returns True at success
     game.act_action(action)
 ```
+
+
+## Contributing
+You are more than welcome to send pull requests or simply talk to me if you think something is wrong or could be done more pythonic.
