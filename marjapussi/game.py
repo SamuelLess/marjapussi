@@ -29,6 +29,7 @@ class MarjaPussi():
         self.rules = MarjaPussi.DEFAULT_RULES | override_rules
         self.logger.debug(f"Ruleset: {override_rules}")
         # init players and cards
+        assert len(player_names) == 4, "There have to be 4 names!"
         deck = utils.CARDS[:]
         shuffle(deck)
         self.players = [Player(name, num, self.rules["points"])
@@ -51,7 +52,7 @@ class MarjaPussi():
         self.playing_player = None
         self.game_value = self.rules["start_game_value"]
         self.no_one_plays = True
-        self.game_phase = self.rules["start_phase"]
+        self.phase = self.rules["start_phase"]
         self.passed_cards = {"forth": [], "back": []}
         self.all_actions = []
         self.sup_col = ""
@@ -71,7 +72,7 @@ class MarjaPussi():
             "ANSW": self.legal_answer,
             "TRCK": self.legal_trck,
             "DONE": lambda: []
-        }[self.game_phase]
+        }[self.phase]
         return legal_in_phase()
 
     def act_action(self, action) -> bool:
@@ -101,7 +102,7 @@ class MarjaPussi():
             "QUES": self.act_ques,
             "ANSW": self.act_answ,
             "TRCK": self.act_trck,
-        }[self.game_phase]
+        }[self.phase]
         act_in_phase(action_list[0], action_list[2])
         return True
 
@@ -134,7 +135,7 @@ class MarjaPussi():
                 self.player_at_turn = self.players[0]
                 self.logger.info(
                     f"{MarjaPussi.INFO_MSG['noon_plays'][self.language]}. {self.player_at_turn.name} {MarjaPussi.INFO_MSG['plays'][self.language]}")
-                self.game_phase = "TRCK"
+                self.phase = "TRCK"
             else:
                 # last prov player takes the game
                 self.no_one_plays = False
@@ -143,7 +144,7 @@ class MarjaPussi():
                 self.playing_player = self.player_at_turn
                 self.logger.info(
                     f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['takes_the_game'][self.language]} {self.game_value}.")
-                self.game_phase = "PASS"
+                self.phase = "PASS"
 
     def legal_pass(self):
         actions = []
@@ -163,7 +164,7 @@ class MarjaPussi():
                 self.playing_player.take_card(c)
                 self.playing_player.partner.give_card(c)
             self.player_at_turn = self.player_at_turn.partner
-            self.game_phase = "PBCK"
+            self.phase = "PBCK"
 
     def legal_passing_back(self):
         actions = []
@@ -185,7 +186,7 @@ class MarjaPussi():
             self.player_at_turn = self.playing_player
             self.logger.info(
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['and'][self.language]} {self.player_at_turn.partner.name} {MarjaPussi.INFO_MSG['passed_cards'][self.language]}")
-            self.game_phase = "PRMO"
+            self.phase = "PRMO"
 
     def legal_prmo(self):
         actions = [f"{self.player_at_turn.number},PRMO,{000}"]
@@ -202,7 +203,7 @@ class MarjaPussi():
         else:
             self.logger.info(
                 f"{self.playing_player.name} {MarjaPussi.INFO_MSG['plays_for'][self.language]} {self.game_value}.")
-        self.game_phase = "TRCK"
+        self.phase = "TRCK"
 
     def legal_trck(self):
         return [f"{self.player_at_turn.number},TRCK,{c}" for c in
@@ -226,9 +227,9 @@ class MarjaPussi():
                 f"{MarjaPussi.INFO_MSG['trick'][self.language]} {len(self.tricks)}: {utils.cards_str(self.tricks[-1],fancy=self.fancy)} {MarjaPussi.INFO_MSG['goes_to'][self.language]} {self.player_at_turn.name}.")
             self.player_at_turn.take_trick(
                 self.tricks[-1], last=len(self.tricks) == len(utils.CARDS)/4)
-            self.game_phase = "QUES"
+            self.phase = "QUES"
             if len(self.tricks) == len(utils.CARDS)/4:
-                self.game_phase = "DONE"
+                self.phase = "DONE"
                 self.eval_game()
             else:
                 self.tricks.append([])
@@ -254,19 +255,19 @@ class MarjaPussi():
             self.logger.info(
                 f"{col.capitalize()} {MarjaPussi.INFO_MSG['is_sup'][self.language]}")
             self.player_at_turn.call_sup(col)
-            self.game_phase = "TRCK"
+            self.phase = "TRCK"
         if ques == "you":
             self.logger.info(
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['asks_for'][self.language]} {MarjaPussi.INFO_MSG['pair'][self.language]}")
             self.player_at_turn.asking = 1
             self.player_at_turn = self.player_at_turn.partner
-            self.game_phase = "ANSW"
+            self.phase = "ANSW"
         if ques[:2] == "ou":
             self.logger.info(
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['asks_for'][self.language]} {utils.color_str(ques[-1], fancy=self.fancy)} {MarjaPussi.INFO_MSG['half'][self.language]}")
             self.player_at_turn.asking = 2
             self.player_at_turn = self.player_at_turn.partner
-            self.game_phase = "ANSW"
+            self.phase = "ANSW"
 
     def legal_answer(self):
         quest = self.all_actions[-1][-3:]
@@ -311,7 +312,7 @@ class MarjaPussi():
             self.logger.info(
                 f"{utils.color_str(self.sup_col, fancy=self.fancy).capitalize()} {MarjaPussi.INFO_MSG['is_sup'][self.language]}")
         self.player_at_turn = self.player_at_turn.partner
-        self.game_phase = "TRCK"
+        self.phase = "TRCK"
 
     def eval_game(self):
         self.logger.info(MarjaPussi.INFO_MSG["game_done"][self.language])
@@ -341,7 +342,7 @@ class MarjaPussi():
             "game_value": self.game_value,
             "sup_color": self.sup_col,
             "player_at_turn": self.player_at_turn.name,
-            "game_phase": self.game_phase,
+            "game_phase": self.phase,
             "trick_num": len(self.tricks),
             "current_trick": self.tricks[-1],
             "legal_actions": self.legal_actions(),
