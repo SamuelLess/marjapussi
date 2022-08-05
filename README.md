@@ -1,5 +1,7 @@
 # MarjaPussi
 
+Pyhton implementation of MarjaPussi.
+
 ## Install
 ### Pip
 ```
