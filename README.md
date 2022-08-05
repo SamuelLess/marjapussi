@@ -1,12 +1,14 @@
 # MarjaPussi
-Pyhton implementation of MarjaPussi.
+Python implementation of MarjaPussi, mostly following the rules from [Wurzel e. V.](http://wurzel.org/pussi/indexba7e.html?seite=regeln)
+
+There will be a written version of the exact rules somewhere in the future.
 
 ## Installation
 ### Pip
-To install the most recent version you might have to uninstall any old versions.
 ```
 python -m pip install git+https://github.com/SamuelLess/marjapussi.git
 ```
+To install the most recent version you might have to uninstall any old versions.
 
 ## Usage
 ### Import
