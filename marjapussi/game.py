@@ -16,7 +16,7 @@ class MarjaPussi():
         "start_phase": "PROV",
     }
 
-    def __init__(self, player_names, override_rules={}, log=False, fancy=True, language=1) -> None:
+    def __init__(self, player_names, override_rules={}, log=True, fancy=True, language=1) -> None:
         # init logger
         self.logger = logging.getLogger("single_game_logger")
         if log:
