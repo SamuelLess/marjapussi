@@ -335,6 +335,9 @@ class MarjaPussi():
         else:
             self.logger.info("There are only loosers this round.")
 
+    def players_cards(self):
+        return {player.name: player.cards for player in self.players}
+
     def state_dict(self):
         return {
             "players_names": [player.name for player in self.players],
@@ -346,10 +349,10 @@ class MarjaPussi():
             "trick_num": len(self.tricks),
             "current_trick": self.tricks[-1],
             "legal_actions": self.legal_actions(),
-            "points_playing_party": self.playing_player.points_made + self.playing_player.partner.points_made,
-            "points_not_playing_party": self.playing_player.next_player.points_made + self.playing_player.next_player.partner.points_made,
-            "won": self.playing_player.points_made + self.playing_player.partner.points_made > self.game_value,
-            "noone_plays": self.no_one_plays,
+            "points_playing_party": None if self.playing_player == None else self.playing_player.points_made + self.playing_player.partner.points_made,
+            "points_not_playing_party": None if self.playing_player == None else self.playing_player.next_player.points_made + self.playing_player.next_player.partner.points_made,
+            "won": None if self.playing_player == None else self.playing_player.points_made + self.playing_player.partner.points_made > self.game_value,
+            "noone_plays": None if self.playing_player == None else self.no_one_plays,
         }
 
     INFO_MSG = {
