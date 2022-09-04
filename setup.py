@@ -5,7 +5,7 @@ with open("README.md", 'r') as f:
 
 setuptools.setup(
     name="marjapussi",
-    version="0.1.2",
+    version="0.1.3",
     author="Samuel Leßmann",
     author_email="Samuel@LMpost.de",
     description="Python Implementation of MarjaPussi.",
