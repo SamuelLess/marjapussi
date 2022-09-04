@@ -181,8 +181,8 @@ class MarjaPussi():
             self.logger.debug(
                 f"{player} gives {utils.cards_str(self.passed_cards['back'], fancy=self.fancy)}.")
             for c in self.passed_cards["back"]:
-                self.player_at_turn.take_card(c)
-                self.playing_player.give_card(c)
+                self.playing_player.take_card(c)
+                self.playing_player.partner.give_card(c)
             self.player_at_turn = self.playing_player
             self.logger.info(
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['and'][self.language]} {self.player_at_turn.partner.name} {MarjaPussi.INFO_MSG['passed_cards'][self.language]}")
