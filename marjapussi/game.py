@@ -68,7 +68,7 @@ class MarjaPussi():
             "PASS": self.legal_pass,
             "PBCK": self.legal_passing_back,
             "PRMO": self.legal_prmo,
-            "QUES": self.legal_ques,
+            "QUES": self.legal_ques,#also includes act_trck
             "ANSW": self.legal_answer,
             "TRCK": self.legal_trck,
             "DONE": lambda: []
@@ -245,7 +245,7 @@ class MarjaPussi():
             quests += [f"{self.player_at_turn.number},QUES,you"]
         if lvl <= 2:
             quests += [f"{self.player_at_turn.number},QUES,ou{col}" for col in utils.COLORS]
-        return quests
+        return quests+self.legal_trck()
 
     def act_ques(self, player, ques):
         if ques[:2] == "my":
