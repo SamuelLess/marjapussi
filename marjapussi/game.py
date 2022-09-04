@@ -102,7 +102,7 @@ class MarjaPussi():
             "QUES": self.act_ques,
             "ANSW": self.act_answ,
             "TRCK": self.act_trck,
-        }[self.phase]
+        }[action_list[1]]
         act_in_phase(action_list[0], action_list[2])
         return True
 
