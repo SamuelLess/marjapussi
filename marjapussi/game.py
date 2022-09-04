@@ -148,10 +148,10 @@ class MarjaPussi():
 
     def legal_pass(self):
         actions = []
-        for card in self.playing_player.cards:
+        for card in self.playing_player.partner.cards:
             if card in self.passed_cards["forth"]:
                 continue
-            actions.append(f"{self.playing_player.number},PASS,{card}")
+            actions.append(f"{self.playing_player.partner.number},PASS,{card}")
         return actions
 
     def act_pass(self, player, card):
@@ -161,17 +161,17 @@ class MarjaPussi():
             self.logger.debug(
                 f"{player} gives {utils.cards_str(self.passed_cards['forth'], fancy=self.fancy)}.")
             for c in self.passed_cards["forth"]:
-                self.playing_player.take_card(c)
-                self.playing_player.partner.give_card(c)
+                self.playing_player.give_card(c)
+                self.playing_player.partner.take_card(c)
             self.player_at_turn = self.player_at_turn.partner
             self.phase = "PBCK"
 
     def legal_passing_back(self):
         actions = []
-        for card in self.playing_player.partner.cards:
+        for card in self.playing_player.cards:
             if card in self.passed_cards["back"]:
                 continue
-            actions.append(f"{self.playing_player.partner.number},PBCK,{card}")
+            actions.append(f"{self.playing_player.number},PBCK,{card}")
         return actions
 
     def act_pbck(self, player, card):
