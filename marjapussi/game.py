@@ -213,6 +213,7 @@ class MarjaPussi():
     def act_trck(self, player, card):
         self.logger.info(
             f"{self.players_dict[player].name} {MarjaPussi.INFO_MSG['plays'][self.language]} {utils.card_str(card, fancy=self.fancy)}.")
+        self.phase = 'TRCK'
         self.player_at_turn.take_card(card)
         # first not over
         self.tricks[-1].append(card)
