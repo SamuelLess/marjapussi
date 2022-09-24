@@ -25,6 +25,8 @@ class Player():
 
     def call_sup(self, col) -> None:
         # points go to player calling or asking
+        if col in self.sup_calls:
+            return
         self.sup_calls.append(col)
         self.points_made += self.points[col]
 

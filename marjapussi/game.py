@@ -48,6 +48,7 @@ class MarjaPussi():
             self.players[i].set_partner(self.players[(i+2) % 4])
             self.players[i].set_next_player(self.players[(i+1) % 4])
 
+        self.original_cards = {p.name: p.cards[:] for p in self.players}
         self.player_at_turn = self.players[0]
         self.playing_player = None
         self.game_value = self.rules["start_game_value"]
@@ -56,6 +57,7 @@ class MarjaPussi():
         self.passed_cards = {"forth": [], "back": []}
         self.all_actions = []
         self.sup_col = ""
+        self.all_sup = []
         self.tricks = [[]]
 
     def legal_actions(self) -> list:
@@ -241,7 +243,7 @@ class MarjaPussi():
         quests = []
         if lvl == 0:
             quests += [f"{self.player_at_turn.number},QUES,my{col}" for col in utils.COLORS
-                       if utils.contains_pair(self.player_at_turn.cards, col)]
+                       if (utils.contains_pair(self.player_at_turn.cards, col) and col not in self.all_sup)]
         if lvl <= 1:
             quests += [f"{self.player_at_turn.number},QUES,you"]
         if lvl <= 2:
@@ -256,6 +258,7 @@ class MarjaPussi():
             self.logger.info(
                 f"{col.capitalize()} {MarjaPussi.INFO_MSG['is_sup'][self.language]}")
             self.player_at_turn.call_sup(col)
+            self.all_sup.append(col)
             self.phase = "TRCK"
         if ques == "you":
             self.logger.info(
@@ -274,7 +277,7 @@ class MarjaPussi():
         quest = self.all_actions[-1][-3:]
         if quest == "you":
             answ = [f"{self.player_at_turn.number},ANSW,my{col}" for col in utils.COLORS
-                    if utils.contains_pair(self.player_at_turn.cards, col)]
+                    if (utils.contains_pair(self.player_at_turn.cards, col) and not col in self.all_sup)]
             if not answ:
                 return [f"{self.player_at_turn.number},ANSW,nmy"]
             return answ
@@ -354,6 +357,19 @@ class MarjaPussi():
             "points_not_playing_party": None if self.playing_player == None else self.playing_player.next_player.points_made + self.playing_player.next_player.partner.points_made,
             "won": None if self.playing_player == None else self.playing_player.points_made + self.playing_player.partner.points_made > self.game_value,
             "noone_plays": None if self.playing_player == None else self.no_one_plays,
+        }
+    
+    def end_info(self):
+        """Return dict with all relevant info."""
+        return {
+            "cards": self.original_cards,
+            "passed_cards": self.passed_cards,
+            "tricks": self.tricks,
+            "actions": self.all_actions,
+            "playing_player": self.playing_player.name,
+            "game_value": self.game_value,
+            "players_points": {p.name: p.points_made for p in self.players},
+            "players_sup": {p.name: p.sup_calls for p in self.players}
         }
 
     INFO_MSG = {
