@@ -362,6 +362,7 @@ class MarjaPussi():
     def end_info(self):
         """Return dict with all relevant info."""
         return {
+            "players": [p.name for p in self.players],
             "cards": self.original_cards,
             "passed_cards": self.passed_cards,
             "tricks": self.tricks,
