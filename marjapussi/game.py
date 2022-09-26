@@ -144,7 +144,7 @@ class MarjaPussi():
                 self.player_at_turn = [
                     p for p in self.players if p.still_prov][0]
                 self.playing_player = self.player_at_turn
-                self.player_at_turn = self.playing_player
+                self.player_at_turn = self.playing_player.partner
                 self.logger.info(
                     f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['takes_the_game'][self.language]} {self.game_value}.")
                 self.phase = "PASS"
