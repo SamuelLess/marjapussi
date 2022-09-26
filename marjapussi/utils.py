@@ -34,7 +34,7 @@ def allowed_general(trick, cards, sup_col=None, first=False) -> list:
     allowed = []
     # high card
     for c in cards:
-        if c == high_card(trick+[c], sup_col=""):
+        if c == high_card(trick+[c], sup_col=trick_col):
             allowed.append(c)
     # same color
     if not allowed:
