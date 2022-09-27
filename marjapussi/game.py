@@ -193,7 +193,7 @@ class MarjaPussi():
 
     def legal_prmo(self):
         actions = [f"{self.player_at_turn.number},PRMO,{000}"]
-        for poss_val in range(self.game_value+5, self.rules["max_game_value"], 5):
+        for poss_val in range(self.game_value+5, self.rules["max_game_value"]+1, 5):
             actions.append(f"{self.player_at_turn.number},PRMO,{poss_val}")
         return actions
 
