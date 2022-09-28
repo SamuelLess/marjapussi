@@ -30,26 +30,12 @@ def allowed_general(trick, cards, sup_col=None, first=False) -> list:
         # check for ace
         if (ace := f"{trick_col}-A") in cards:
             return [ace]
-    #!! not nice, problem for future me, but it works
-    allowed = []
-    # high card
-    for c in cards:
-        if c == high_card(trick + [c]) and not ([c for c in trick if c[0] == sup_col] or sup_col != trick_col):
-            allowed.append(c)
-    # same color
-    if not allowed:
-        allowed = [c for c in cards if c[0] == trick_col]
-    # sup high card
-    if not allowed:
-        for c in cards:
-            if c == high_card(trick+[c], sup_col=sup_col):
-                allowed.append(c)
-    # sup same color
-    if not allowed:
+    
+    if not (allowed:=[c for c in cards if c[0] == trick_col]):
         allowed = [c for c in cards if c[0] == sup_col]
-    if not allowed:
-        return cards
-    return allowed
+    if (b:=list(filter(lambda card: card == high_card(trick+[card], sup_col=sup_col), allowed))):
+        allowed = b
+    return allowed if allowed else cards
 
 
 def high_card(cards, sup_col="") -> str:
