@@ -8,7 +8,7 @@ There will be a written version of the exact rules somewhere in the future.
 ```
 python -m pip install git+https://github.com/SamuelLess/marjapussi.git
 ```
-To install the most recent version you might have to uninstall any old versions.
+Installation inside docker containers will not work with the `slim` tag due to missing git support.
 
 ## Usage
 ### Import
