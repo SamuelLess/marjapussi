@@ -298,6 +298,7 @@ class MarjaPussi():
             self.logger.info(
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['has'][self.language]} {utils.color_str(self.sup_col, fancy=self.fancy)} {MarjaPussi.INFO_MSG['pair'][self.language]}")
             self.player_at_turn.call_sup(self.sup_col)
+            self.all_sup.append(self.sup_col)
         # partner has a half
         if answ[:2] == "ou":
             pot_sup = answ[-1]
@@ -305,7 +306,6 @@ class MarjaPussi():
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['has'][self.language]} {utils.color_str(pot_sup, fancy=self.fancy)} {MarjaPussi.INFO_MSG['half'][self.language]}")
             if utils.contains_half(self.player_at_turn.partner.cards, pot_sup):
                 self.sup_col = pot_sup
-                self.player_at_turn.call_sup(pot_sup)
                 self.logger.info(
                     f"{self.player_at_turn.partner.name} {MarjaPussi.INFO_MSG['has_also'][self.language]} {utils.color_str(pot_sup, fancy=self.fancy)} {MarjaPussi.INFO_MSG['half'][self.language]} ")
         # partner doesn't have a half
@@ -314,6 +314,7 @@ class MarjaPussi():
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['doesnt_have'][self.language]} {utils.color_str(answ[-1], fancy=self.fancy)} {MarjaPussi.INFO_MSG['half'][self.language]}")
         # check if new color is sup
         if self.sup_col != old_sup:
+            self.all_sup.append(self.sup_col)
             self.logger.info(
                 f"{utils.color_str(self.sup_col, fancy=self.fancy).capitalize()} {MarjaPussi.INFO_MSG['is_sup'][self.language]}")
         self.player_at_turn = self.player_at_turn.partner
