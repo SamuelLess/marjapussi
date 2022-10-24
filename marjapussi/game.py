@@ -306,6 +306,7 @@ class MarjaPussi():
                 f"{self.player_at_turn.name} {MarjaPussi.INFO_MSG['has'][self.language]} {utils.color_str(pot_sup, fancy=self.fancy)} {MarjaPussi.INFO_MSG['half'][self.language]}")
             if utils.contains_half(self.player_at_turn.partner.cards, pot_sup):
                 self.sup_col = pot_sup
+                self.player_at_turn.call_sup(pot_sup)
                 self.logger.info(
                     f"{self.player_at_turn.partner.name} {MarjaPussi.INFO_MSG['has_also'][self.language]} {utils.color_str(pot_sup, fancy=self.fancy)} {MarjaPussi.INFO_MSG['half'][self.language]} ")
         # partner doesn't have a half
