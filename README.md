@@ -1,7 +1,7 @@
 # MarjaPussi
-Python implementation of MarjaPussi, mostly following the rules from [Wurzel e. V.](http://wurzel.org/pussi/indexba7e.html?seite=regeln)
+Python implementation of MarjaPussi, mostly following the rules from [Wurzel e. V.](http://wurzel.org/pussi/indexba7e.html?seite=regeln), exactly following the rules on [marjapussi.de](https://marjapussi.de/rules).
 
-There will be a written version of the exact rules somewhere in the future.
+This package is used by the backend of [marjapussi.de](https://marjapussi.de).
 
 ## Installation
 ### Pip
