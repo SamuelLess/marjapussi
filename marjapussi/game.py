@@ -323,6 +323,8 @@ class MarjaPussi():
 
     def eval_game(self):
         self.logger.info(MarjaPussi.INFO_MSG["game_done"][self.language])
+        if self.no_one_plays:
+            return
         playing, partner = self.playing_player, self.playing_player.partner
         self.logger.info(
             f"{playing.name} {MarjaPussi.INFO_MSG['and'][self.language]} {partner.name}: {playing.points_made}+{partner.points_made}={(pl:=playing.points_made+partner.points_made)}")
@@ -370,10 +372,11 @@ class MarjaPussi():
             "passed_cards": self.passed_cards,
             "tricks": self.tricks,
             "actions": self.all_actions,
-            "playing_player": self.playing_player.name,
+            "playing_player": self.playing_player.name if not self.no_one_plays else None,
             "game_value": self.game_value,
             "players_points": {p.name: p.points_made for p in self.players},
-            "players_sup": {p.name: p.sup_calls for p in self.players}
+            "players_sup": {p.name: p.sup_calls for p in self.players},
+            "schwarz_game": (len(self.players[0].tricks)+len(self.players[2].tricks) == 9),
         }
 
     INFO_MSG = {
