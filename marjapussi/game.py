@@ -376,7 +376,8 @@ class MarjaPussi():
             "game_value": self.game_value,
             "players_points": {p.name: p.points_made for p in self.players},
             "players_sup": {p.name: p.sup_calls for p in self.players},
-            "schwarz_game": (len(self.players[0].tricks)+len(self.players[2].tricks) == 9),
+            "schwarz_game": (len(self.players[0].tricks)+len(self.players[2].tricks) == 9 
+                                or len(self.players[1].tricks)+len(self.players[3].tricks) == 9),
         }
 
     INFO_MSG = {
