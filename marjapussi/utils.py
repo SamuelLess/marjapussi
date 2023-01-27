@@ -42,16 +42,17 @@ def high_card(cards, sup_col="") -> str:
     """Finds highest card in single trick."""
     if not cards:
         return None
-    high = cards[0]
     col = cards[0][0]
-    #!! also not really nice, there has to be a cleaner way but
+    base_col_cards = [card for card in cards if card[0] == col]
+    sup_col_cards = [card for card in cards if card[0] == sup_col]
+    return sup_col_cards[-1] if sup_col_cards else base_col_cards[-1]
+    """#!! also not really nice, there has to be a cleaner way but
     for c in cards:
         if c[0] == col and higher_value(high, c):
             high = c
-
     sup_high = high_card([c for c in cards if c[0] == sup_col]
                          ) if sup_col != "" and sup_col != col else None
-    return sup_high if not sup_high is None else high
+    return sup_high if not sup_high is None else high"""
 
 
 def higher_value(base, card) -> bool:
@@ -61,6 +62,13 @@ def higher_value(base, card) -> bool:
             return False
         if card[2] == val:
             return True
+
+
+def higher_cards(base, sup_col='', pool=CARDS) -> list:
+    """Returns all cards out of the pool that would win a trick over base as high card."""
+    if not sup_col:
+        return [card for card in pool if higher_value(base, card) and base[0] == card[0]]
+    return [card for card in pool if (higher_value(base, card) and base[0] == card[0]) or (card[0] == sup_col)]
 
 
 def contains_pair(cards, col) -> bool:
@@ -73,6 +81,12 @@ def contains_half(cards, col) -> bool:
 
 def sorted_cards(cards) -> list:
     return [card for card in CARDS if card in set(cards)]
+    return cards
+
+
+def all_color_cards(col):
+    """Returns all cards with given color."""
+    return [f"{col}-{v}" for v in VALUES]
 
 
 def card_str(card, fancy=True) -> str:
