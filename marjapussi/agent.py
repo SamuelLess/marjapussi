@@ -51,7 +51,7 @@ class Agent:
         player_num = int(player_num)
         player_name = self.all_players[player_num]
         if phase == 'PROV' or phase == 'PRMO':
-            self.state['provoking_history'].append((player_name, int(val)))
+            self.state['provoking_history'].append((player_num, int(val)))
             if int(val):
                 self.state['playing_player'] = player_name
                 self.state['game_value'] = int(val)
