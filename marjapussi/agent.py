@@ -16,8 +16,10 @@ class Agent:
         self.all_players = all_players
         self.policy = policy
         self.state: dict = {
+            'player_num': all_players.index(name),
             'cards': start_cards,
             'provoking_history': [],
+            'game_value': 115,
             'current_trick': [],
             'all_tricks': [],
             'points': {player: 0 for player in all_players},
@@ -52,6 +54,7 @@ class Agent:
             self.state['provoking_history'].append((player_name, int(val)))
             if int(val):
                 self.state['playing_player'] = player_name
+                self.state['game_value'] = int(val)
         
         if phase == 'TRCK':
             self.state['current_trick'].append((player_name, val))
@@ -76,10 +79,9 @@ class Agent:
             for name in self.all_players:
                 self.state['possible_cards'][name].discard(val)
                 self.state['secure_cards'][name].discard(val)
-        if self.name == 1:
-            self.logger.debug(f"{self} observed {action}.")
-            if self.log == 'DEBUG':
-                self._print_state()
+        self.logger.debug(f"{self} observed {action}.")
+        if self.log == 'DEBUG':
+            self._print_state()
 
     def _print_state(self):
         print(f"State of {str(self)}:")
@@ -92,6 +94,7 @@ class Agent:
         print(f"secure cards:")
         for p, cards in self.state['secure_cards'].items():
             print(f"{p}:\t {cards_str(list(sorted_cards(cards)))}")
+        print(self.state)
     
     def _possible_cards_after_trick(self, possible: dict, trick: list, sup_col='', first_trick=False) -> dict[str]:
         """Returns which player could have which cards after a trick.
