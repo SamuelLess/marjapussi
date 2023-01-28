@@ -49,7 +49,9 @@ class Agent:
         """Observe an action and update state. (using custom function if given)"""
         player_num, phase, val = action.split(',')
         player_num = int(player_num)
+        partner_num = (player_num + 2) % 4
         player_name = self.all_players[player_num]
+
         if phase == 'PROV' or phase == 'PRMO':
             self.state['provoking_history'].append((player_name, int(val)))
             if int(val):
@@ -68,11 +70,11 @@ class Agent:
         if phase == 'PASS' or phase == "PBCK":
             self.state['secure_cards'][player_name].discard(val)
             self.state['possible_cards'][player_name].discard(val)
-            self.state['secure_cards'][self.all_players[(player_num + 2)%4]].add(val)
-            self.state['possible_cards'][self.all_players[(player_num + 2)%4]].add(val)
+            self.state['secure_cards'][self.all_players[partner_num]].add(val)
+            self.state['possible_cards'][self.all_players[partner_num]].add(val)
             #remove from enemys
-            self.state['possible_cards'][self.all_players[(player_num + 1)%4]].discard(val)
-            self.state['possible_cards'][self.all_players[(player_num - 1)%4]].discard(val)
+            self.state['possible_cards'][self.all_players[partner_num]].discard(val)
+            self.state['possible_cards'][self.all_players[partner_num]].discard(val)
 
         if val in CARDS and not (phase == 'PASS' or phase == "PBCK"):
             assert val in self.state['possible_cards'][player_name] or val in self.state['secure_cards'][player_name], "Card has to be possible if it is played."
