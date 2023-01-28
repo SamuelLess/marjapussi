@@ -81,7 +81,12 @@ class Agent:
             for name in self.all_players:
                 self.state['possible_cards'][name].discard(val)
                 self.state['secure_cards'][name].discard(val)
+
+        # let the policy observe the action as well
+        self.policy.observe_action(self.state, action)
+
         self.logger.debug(f"{self} observed {action}.")
+
         if self.log == 'DEBUG':
             self._print_state()
 
