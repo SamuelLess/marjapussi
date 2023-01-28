@@ -28,6 +28,10 @@ class Agent:
             'playing_player': '',
         }
         self.custom_state = custom_state_dict
+
+        # give the policy the start hand
+        self.policy.start_hand(self.state['possible_cards'])
+
         self.logger = logging.getLogger("single_agent_logger")
         self.log = log
         if log:

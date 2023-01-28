@@ -17,6 +17,13 @@ class Policy(object):
 
     """
     This method is called when the agent
+    gets it's cards.
+    """
+    def start_hand(self, possible_cards) -> None:
+        pass
+
+    """
+    This method is called when the agent
     is at it's turn. It responds with an
     action string.
     """
