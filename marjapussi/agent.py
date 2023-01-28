@@ -1,6 +1,6 @@
 from marjapussi.game import MarjaPussi
 from marjapussi.policy import Policy, RandomPolicy
-from marjapussi.utils import CARDS, all_color_cards, cards_str, high_card, higher_cards, sorted_cards
+from marjapussi.utils import CARDS, COLORS, VALUES, all_color_cards, cards_str, high_card, higher_cards, sorted_cards
 
 from tqdm import trange
 import logging
@@ -66,6 +66,14 @@ class Agent:
                     self.logger.debug(f"AGENT {self} evals trick")
                 self.state['possible_cards'] = self._possible_cards_after_trick(self.state['possible_cards'], self.state['current_trick'])
                 self.state['current_trick'] = []
+
+            if len(state['all_tricks']) == 0:
+                if val.split('-')[1] != 'A':
+                    for i in COLORS:
+                        self.state['possible_cards'][player_name].discard(f"{i}-A")
+                if val.split('-')[0] != 'g':
+                    for i in VALUES:
+                        self.state['possible_cards'][player_name].discard(f"g-{i}")
 
         if phase == 'PASS' or phase == "PBCK":
             self.state['secure_cards'][player_name].discard(val)
