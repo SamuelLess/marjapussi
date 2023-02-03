@@ -71,7 +71,7 @@ class Agent:
                 self.state['possible_cards'] = self._possible_cards_after_trick(self.state['possible_cards'], self.state['current_trick'])
                 self.state['current_trick'] = []
 
-            if len(state['all_tricks']) == 0:
+            if len(self.state['all_tricks']) == 0:
                 if val.split('-')[1] != 'A':
                     for i in COLORS:
                         self.state['possible_cards'][player_name].discard(f"{i}-A")
