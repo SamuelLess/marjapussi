@@ -75,7 +75,7 @@ class Agent:
                 if val.split('-')[1] != 'A':
                     for i in COLORS:
                         self.state['possible_cards'][player_name].discard(f"{i}-A")
-                if val.split('-')[0] != 'g':
+                elif val.split('-')[0] != 'g':
                     for i in VALUES:
                         self.state['possible_cards'][player_name].discard(f"g-{i}")
 
