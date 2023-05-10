@@ -1,6 +1,6 @@
 from marjapussi.game import MarjaPussi
 from marjapussi.policy import Policy, RandomPolicy
-from marjapussi.utils import CARDS, all_color_cards, cards_str, high_card, higher_cards, sorted_cards
+from marjapussi.utils import CARDS, all_color_cards, all_value_cards, cards_str, high_card, higher_cards, sorted_cards
 
 from tqdm import trange
 import logging
@@ -111,6 +111,13 @@ class Agent:
         trick_col = trick[0][1][0]
         trick_till_here = []
         #print(f"{trick_col=}")
+        #first trick
+        if first_trick and trick[0][1][2] != 'A': # first trick needs to be an ace or green
+            player = trick[0][0]
+            possible[player] = (set(possible[player]).difference(set(all_value_cards('A'))))
+            if trick[0][1][0] != 'g':
+                possible[player] = (set(possible[player]).difference(set(all_color_cards('g'))))
+        #any trick
         for player, card in trick:
             if card[0] != trick_col and card[0] != sup_col: # cant have same color and cant have trump
                 possible[player] = (set(possible[player]).difference(set(all_color_cards(sup_col))))
@@ -127,8 +134,7 @@ class Agent:
         return possible
 
     def _standing_cards(player_name, possible: dict, sup_col) -> list:
-        """Returns all cards with which player_name """
-
+        """TODO Returns all cards with which player_name """
 
 
 def test_agents(policy_A: Policy, policy_B: Policy, log_agent=False, log_game=False,
