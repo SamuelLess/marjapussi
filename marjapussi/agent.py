@@ -1,6 +1,6 @@
 from marjapussi.game import MarjaPussi
 from marjapussi.policy import Policy, RandomPolicy
-from marjapussi.utils import CARDS, all_color_cards, all_value_cards, cards_str, high_card, higher_cards, sorted_cards
+from marjapussi.utils import CARDS, COLORS, VALUES, all_color_cards, all_value_cards, cards_str, high_card, higher_cards, sorted_cards
 
 from tqdm import trange
 import logging
@@ -29,6 +29,10 @@ class Agent:
             'playing_player': '',
         }
         self.custom_state = custom_state_dict
+
+        # give the policy the start hand
+        self.policy.start_hand(self.state['possible_cards'])
+
         self.logger = logging.getLogger("single_agent_logger")
         self.log = log
         if log:
@@ -50,7 +54,9 @@ class Agent:
         """Observe an action and update state. (using custom function if given)"""
         player_num, phase, val = action.split(',')
         player_num = int(player_num)
+        partner_num = (player_num + 2) % 4
         player_name = self.all_players[player_num]
+
         if phase == 'PROV' or phase == 'PRMO':
             self.state['provoking_history'].append((player_num, int(val)))
             if int(val):
@@ -66,21 +72,34 @@ class Agent:
                 self.state['possible_cards'] = self._possible_cards_after_trick(self.state['possible_cards'], self.state['current_trick'])
                 self.state['current_trick'] = []
 
+            if len(self.state['all_tricks']) == 0 and len(self.state['current_trick']) == 0:
+                if val.split('-')[1] != 'A':
+                    for i in COLORS:
+                        self.state['possible_cards'][player_name].discard(f"{i}-A")
+                elif val.split('-')[0] != 'g':
+                    for i in VALUES:
+                        self.state['possible_cards'][player_name].discard(f"g-{i}")
+
         if phase == 'PASS' or phase == "PBCK":
             self.state['secure_cards'][player_name].discard(val)
             self.state['possible_cards'][player_name].discard(val)
-            self.state['secure_cards'][self.all_players[(player_num + 2)%4]].add(val)
-            self.state['possible_cards'][self.all_players[(player_num + 2)%4]].add(val)
+            self.state['secure_cards'][self.all_players[partner_num]].add(val)
+            self.state['possible_cards'][self.all_players[partner_num]].add(val)
             #remove from enemys
-            self.state['possible_cards'][self.all_players[(player_num + 1)%4]].discard(val)
-            self.state['possible_cards'][self.all_players[(player_num - 1)%4]].discard(val)
+            self.state['possible_cards'][self.all_players[partner_num]].discard(val)
+            self.state['possible_cards'][self.all_players[partner_num]].discard(val)
 
         if val in CARDS and not (phase == 'PASS' or phase == "PBCK"):
             assert val in self.state['possible_cards'][player_name] or val in self.state['secure_cards'][player_name], "Card has to be possible if it is played."
             for name in self.all_players:
                 self.state['possible_cards'][name].discard(val)
                 self.state['secure_cards'][name].discard(val)
+
+        # let the policy observe the action as well
+        self.policy.observe_action(self.state, action)
+
         self.logger.debug(f"{self} observed {action}.")
+
         if self.log == 'DEBUG':
             self._print_state()
 
