@@ -6,6 +6,7 @@ from tqdm import trange
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s')
 
+
 class Agent:
     """Implements an agent able to play Marjapussi."""
     def __init__(self, name: str, all_players: list[str], policy: Policy, start_cards: list[str], custom_state_dict={}, log=False) -> None:
@@ -95,7 +96,7 @@ class Agent:
         for p, cards in self.state['secure_cards'].items():
             print(f"{p}:\t {cards_str(list(sorted_cards(cards)))}")
         print(self.state)
-    
+
     def _possible_cards_after_trick(self, possible: dict, trick: list, sup_col='', first_trick=False) -> dict[str]:
         """Returns which player could have which cards after a trick.
         possible: dict with players and possible cards
@@ -103,38 +104,51 @@ class Agent:
         trump: color of trump [r|s|e|g]
         first_trick: whether the trick is the first trick
         """
+        def remove_possibles(set, difflist):
+            return set(set).difference(set(difflist))
+
         if self.log:
             pass
-            #print(f"poss befor trick")
-            #self._print_state()
-        
+            # print(f"poss before trick")
+            # self._print_state()
+        # remove played cards from possible cards
+        cards_in_trick = set([elem[1] for elem in trick])
+        for player in [elem[0] for elem in trick]:
+            possible[player] = remove_possibles(possible[player], cards_in_trick)
+
         trick_col = trick[0][1][0]
         trick_till_here = []
-        #print(f"{trick_col=}")
-        #first trick
-        if first_trick and trick[0][1][2] != 'A': # first trick needs to be an ace or green
+
+        # special rule for first trick
+        if first_trick and trick[0][1][2] != 'A':  # first trick needs to be an ace or green
             player = trick[0][0]
-            possible[player] = (set(possible[player]).difference(set(all_value_cards('A'))))
+            possible[player] = remove_possibles(possible[player], all_value_cards('A'))
             if trick[0][1][0] != 'g':
-                possible[player] = (set(possible[player]).difference(set(all_color_cards('g'))))
-        #any trick
+                possible[player] = remove_possibles(possible[player], all_color_cards('g'))
+        # any trick
         for player, card in trick:
-            if card[0] != trick_col and card[0] != sup_col: # cant have same color and cant have trump
-                possible[player] = (set(possible[player]).difference(set(all_color_cards(sup_col))))
-            if card[0] != trick_col: # cant have same color
-                possible[player] = (set(possible[player]).difference(set(all_color_cards(trick_col))))
-            if trick_till_here and card != high_card(trick_till_here + [card]): #cant have any card higher than the highest in the trick
-                possible[player] = (set(possible[player]).difference(
-                    set(higher_cards(high_card(trick_till_here, sup_col=sup_col),sup_col=sup_col, pool=possible[player]))))
+            if card[0] != trick_col and card[0] != sup_col:  # cant have same color and cant have trump
+                possible[player] = remove_possibles(possible[player], all_color_cards(sup_col))
+            if card[0] != trick_col:  # cant have same color
+                possible[player] = remove_possibles(possible[player], all_color_cards(trick_col))
+                # cant have any card higher than the highest in the trick
+            if trick_till_here and card != high_card(trick_till_here + [card]):
+                possible[player] = remove_possibles(possible[player],
+                                                    higher_cards(high_card(trick_till_here, up_col=sup_col),
+                                                                 sup_col=sup_col,
+                                                                 pool=possible[player]))
             trick_till_here.append(card)
         if self.log:
             pass
-            #print("poss after")
-            #self._print_state()
+            # print("poss after")
+            # self._print_state()
         return possible
 
-    def _standing_cards(player_name, possible: dict, sup_col) -> list:
+    def _standing_cards(player_name, possible: dict, sup_col='') -> list:
         """TODO Returns all cards with which player_name """
+        # lets begin by sorting the possible cards by strength
+        # First: if there is any trump, the trump is the only thing that could be standing
+        pass
 
 
 def test_agents(policy_A: Policy, policy_B: Policy, log_agent=False, log_game=False,
