@@ -1,10 +1,11 @@
 from marjapussi.game import MarjaPussi
 from marjapussi.policy import Policy, RandomPolicy
-from marjapussi.utils import CARDS, all_color_cards, cards_str, high_card, higher_cards, sorted_cards
+from marjapussi.utils import CARDS, COLORS, VALUES, all_color_cards, all_value_cards, cards_str, high_card, higher_cards, sorted_cards
 
 from tqdm import trange
 import logging
 logging.basicConfig(format='%(levelname)s: %(message)s')
+
 
 class Agent:
     """Implements an agent able to play Marjapussi."""
@@ -28,6 +29,10 @@ class Agent:
             'playing_player': '',
         }
         self.custom_state = custom_state_dict
+
+        # give the policy the start hand
+        self.policy.start_hand(self.state['possible_cards'])
+
         self.logger = logging.getLogger("single_agent_logger")
         self.log = log
         if log:
@@ -49,7 +54,9 @@ class Agent:
         """Observe an action and update state. (using custom function if given)"""
         player_num, phase, val = action.split(',')
         player_num = int(player_num)
+        partner_num = (player_num + 2) % 4
         player_name = self.all_players[player_num]
+
         if phase == 'PROV' or phase == 'PRMO':
             self.state['provoking_history'].append((player_num, int(val)))
             if int(val):
@@ -65,21 +72,34 @@ class Agent:
                 self.state['possible_cards'] = self._possible_cards_after_trick(self.state['possible_cards'], self.state['current_trick'])
                 self.state['current_trick'] = []
 
+            if len(self.state['all_tricks']) == 0 and len(self.state['current_trick']) == 0:
+                if val.split('-')[1] != 'A':
+                    for i in COLORS:
+                        self.state['possible_cards'][player_name].discard(f"{i}-A")
+                elif val.split('-')[0] != 'g':
+                    for i in VALUES:
+                        self.state['possible_cards'][player_name].discard(f"g-{i}")
+
         if phase == 'PASS' or phase == "PBCK":
             self.state['secure_cards'][player_name].discard(val)
             self.state['possible_cards'][player_name].discard(val)
-            self.state['secure_cards'][self.all_players[(player_num + 2)%4]].add(val)
-            self.state['possible_cards'][self.all_players[(player_num + 2)%4]].add(val)
+            self.state['secure_cards'][self.all_players[partner_num]].add(val)
+            self.state['possible_cards'][self.all_players[partner_num]].add(val)
             #remove from enemys
-            self.state['possible_cards'][self.all_players[(player_num + 1)%4]].discard(val)
-            self.state['possible_cards'][self.all_players[(player_num - 1)%4]].discard(val)
+            self.state['possible_cards'][self.all_players[partner_num]].discard(val)
+            self.state['possible_cards'][self.all_players[partner_num]].discard(val)
 
         if val in CARDS and not (phase == 'PASS' or phase == "PBCK"):
             assert val in self.state['possible_cards'][player_name] or val in self.state['secure_cards'][player_name], "Card has to be possible if it is played."
             for name in self.all_players:
                 self.state['possible_cards'][name].discard(val)
                 self.state['secure_cards'][name].discard(val)
+
+        # let the policy observe the action as well
+        self.policy.observe_action(self.state, action)
+
         self.logger.debug(f"{self} observed {action}.")
+
         if self.log == 'DEBUG':
             self._print_state()
 
@@ -95,7 +115,7 @@ class Agent:
         for p, cards in self.state['secure_cards'].items():
             print(f"{p}:\t {cards_str(list(sorted_cards(cards)))}")
         print(self.state)
-    
+
     def _possible_cards_after_trick(self, possible: dict, trick: list, sup_col='', first_trick=False) -> dict[str]:
         """Returns which player could have which cards after a trick.
         possible: dict with players and possible cards
@@ -103,32 +123,51 @@ class Agent:
         trump: color of trump [r|s|e|g]
         first_trick: whether the trick is the first trick
         """
+        def remove_possibles(set, difflist):
+            return set(set).difference(set(difflist))
+
         if self.log:
             pass
-            #print(f"poss befor trick")
-            #self._print_state()
-        
+            # print(f"poss before trick")
+            # self._print_state()
+        # remove played cards from possible cards
+        cards_in_trick = set([elem[1] for elem in trick])
+        for player in [elem[0] for elem in trick]:
+            possible[player] = remove_possibles(possible[player], cards_in_trick)
+
         trick_col = trick[0][1][0]
         trick_till_here = []
-        #print(f"{trick_col=}")
+
+        # special rule for first trick
+        if first_trick and trick[0][1][2] != 'A':  # first trick needs to be an ace or green
+            player = trick[0][0]
+            possible[player] = remove_possibles(possible[player], all_value_cards('A'))
+            if trick[0][1][0] != 'g':
+                possible[player] = remove_possibles(possible[player], all_color_cards('g'))
+        # any trick
         for player, card in trick:
-            if card[0] != trick_col and card[0] != sup_col: # cant have same color and cant have trump
-                possible[player] = (set(possible[player]).difference(set(all_color_cards(sup_col))))
-            if card[0] != trick_col: # cant have same color
-                possible[player] = (set(possible[player]).difference(set(all_color_cards(trick_col))))
-            if trick_till_here and card != high_card(trick_till_here + [card]): #cant have any card higher than the highest in the trick
-                possible[player] = (set(possible[player]).difference(
-                    set(higher_cards(high_card(trick_till_here, sup_col=sup_col),sup_col=sup_col, pool=possible[player]))))
+            if card[0] != trick_col and card[0] != sup_col:  # cant have same color and cant have trump
+                possible[player] = remove_possibles(possible[player], all_color_cards(sup_col))
+            if card[0] != trick_col:  # cant have same color
+                possible[player] = remove_possibles(possible[player], all_color_cards(trick_col))
+                # cant have any card higher than the highest in the trick
+            if trick_till_here and card != high_card(trick_till_here + [card]):
+                possible[player] = remove_possibles(possible[player],
+                                                    higher_cards(high_card(trick_till_here, up_col=sup_col),
+                                                                 sup_col=sup_col,
+                                                                 pool=possible[player]))
             trick_till_here.append(card)
         if self.log:
             pass
-            #print("poss after")
-            #self._print_state()
+            # print("poss after")
+            # self._print_state()
         return possible
 
-    def _standing_cards(player_name, possible: dict, sup_col) -> list:
-        """Returns all cards with which player_name """
-
+    def _standing_cards(player_name, possible: dict, sup_col='') -> list:
+        """TODO Returns all cards with which player_name """
+        # lets begin by sorting the possible cards by strength
+        # First: if there is any trump, the trump is the only thing that could be standing
+        pass
 
 
 def test_agents(policy_A: Policy, policy_B: Policy, log_agent=False, log_game=False,

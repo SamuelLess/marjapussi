@@ -89,6 +89,11 @@ def all_color_cards(col):
     return [f"{col}-{v}" for v in VALUES]
 
 
+def all_value_cards(value):
+    """Returns all cards with given type."""
+    return [f"{c}-{value}" for c in COLORS]
+
+
 def card_str(card, fancy=True) -> str:
     return text_format[card[0]] + card + text_format["end"] if fancy else card
 
