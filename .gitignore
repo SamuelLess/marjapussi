@@ -3,6 +3,7 @@ Dockerfile
 
 main.py
 
+.pixi/
 .*/
 !/.gitignore
 
