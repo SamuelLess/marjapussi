@@ -5,136 +5,11 @@ import random
 import pytest
 
 from marjapussi.game import MarjaPussi
-from marjapussi.v2.actions import (
-    ActionAnnounceTrump,
-    ActionAnswer,
-    ActionCardPlayed,
-    ActionNewBid,
-    ActionPass,
-    ActionQuestion,
-    AnswerNoHalf,
-    AnswerYesHalf,
-    AnswerYesPair,
-    QuestionYourHalf,
-)
+from marjapussi.v2.actions import ActionPass
+from marjapussi.v2.compat import v1_action_to_v2, v1_actions_to_v2, v2_action_to_v1
 from marjapussi.v2.events import GameAction
 from marjapussi.v2.game import MarjapussiGame
-from marjapussi.v2.types import Card, PlaceAtTable, Suit
-
-SUIT_FROM_CHAR: dict[str, Suit] = {
-    "r": Suit.Red,
-    "s": Suit.Bells,
-    "e": Suit.Acorns,
-    "g": Suit.Green,
-}
-CHAR_FROM_SUIT: dict[Suit, str] = {v: k for k, v in SUIT_FROM_CHAR.items()}
-
-
-def _v2_action_to_v1(action: GameAction, *, is_bidding: bool) -> str | None:
-    """Convert a v2 GameAction to v1 string format."""
-    p = action.player.root
-    at = action.action_type
-
-    if at == "Start":
-        return None
-
-    if at == "StopBidding":
-        return f"{p},{'PROV' if is_bidding else 'PRMO'},0"
-
-    if isinstance(at, ActionNewBid):
-        return f"{p},{'PROV' if is_bidding else 'PRMO'},{at.NewBid}"
-
-    if isinstance(at, ActionCardPlayed):
-        return f"{p},TRCK,{at.CardPlayed}"
-
-    if isinstance(at, ActionAnnounceTrump):
-        return f"{p},QUES,my{CHAR_FROM_SUIT[at.AnnounceTrump]}"
-
-    if isinstance(at, ActionQuestion):
-        if at.Question == "Yours":
-            return f"{p},QUES,you"
-        if isinstance(at.Question, QuestionYourHalf):
-            return f"{p},QUES,ou{CHAR_FROM_SUIT[at.Question.YourHalf]}"
-
-    if isinstance(at, ActionAnswer):
-        if at.Answer == "NoPair":
-            return f"{p},ANSW,nmy"
-        if isinstance(at.Answer, AnswerYesPair):
-            return f"{p},ANSW,my{CHAR_FROM_SUIT[at.Answer.YesPair]}"
-        if isinstance(at.Answer, AnswerYesHalf):
-            return f"{p},ANSW,ou{CHAR_FROM_SUIT[at.Answer.YesHalf]}"
-        if isinstance(at.Answer, AnswerNoHalf):
-            return f"{p},ANSW,no{CHAR_FROM_SUIT[at.Answer.NoHalf]}"
-
-    msg = f"Unhandled v2 action: {action}"
-    raise ValueError(msg)
-
-
-def _v1_action_to_v2(action_str: str) -> GameAction:
-    """Convert a v1 action string to v2 GameAction."""
-    parts = action_str.split(",")
-    player = PlaceAtTable(root=int(parts[0]))
-    phase, content = parts[1], parts[2]
-
-    if phase in ("PROV", "PRMO"):
-        val = int(content)
-        if val == 0:
-            return GameAction(action_type="StopBidding", player=player)
-        return GameAction(action_type=ActionNewBid(NewBid=val), player=player)
-
-    if phase == "TRCK":
-        return GameAction(
-            action_type=ActionCardPlayed(CardPlayed=Card.model_validate(content)),
-            player=player,
-        )
-
-    if phase == "QUES":
-        if content[:2] == "my":
-            return GameAction(
-                action_type=ActionAnnounceTrump(
-                    AnnounceTrump=SUIT_FROM_CHAR[content[2]]
-                ),
-                player=player,
-            )
-        if content == "you":
-            return GameAction(
-                action_type=ActionQuestion(Question="Yours"), player=player
-            )
-        if content[:2] == "ou":
-            return GameAction(
-                action_type=ActionQuestion(
-                    Question=QuestionYourHalf(YourHalf=SUIT_FROM_CHAR[content[2]])
-                ),
-                player=player,
-            )
-
-    if phase == "ANSW":
-        if content == "nmy":
-            return GameAction(action_type=ActionAnswer(Answer="NoPair"), player=player)
-        if content[:2] == "my":
-            return GameAction(
-                action_type=ActionAnswer(
-                    Answer=AnswerYesPair(YesPair=SUIT_FROM_CHAR[content[2]])
-                ),
-                player=player,
-            )
-        if content[:2] == "ou":
-            return GameAction(
-                action_type=ActionAnswer(
-                    Answer=AnswerYesHalf(YesHalf=SUIT_FROM_CHAR[content[2]])
-                ),
-                player=player,
-            )
-        if content[:2] == "no":
-            return GameAction(
-                action_type=ActionAnswer(
-                    Answer=AnswerNoHalf(NoHalf=SUIT_FROM_CHAR[content[2]])
-                ),
-                player=player,
-            )
-
-    msg = f"Unhandled v1 action: {action_str}"
-    raise ValueError(msg)
+from marjapussi.v2.types import Card, PlaceAtTable
 
 
 def _play_and_compare(seed: int) -> None:
@@ -197,7 +72,7 @@ def _play_and_compare(seed: int) -> None:
         v2_as_v1 = {
             s
             for a in v2_legal
-            if (s := _v2_action_to_v1(a, is_bidding=is_bidding)) is not None
+            if (s := v2_action_to_v1(a, is_bidding=is_bidding)) is not None
         }
 
         assert v1_set == v2_as_v1, (
@@ -209,14 +84,74 @@ def _play_and_compare(seed: int) -> None:
 
         chosen_v1 = rng.choice(sorted(v1_legal))
         assert v1.act_action(chosen_v1)
-        v2.apply_action(_v1_action_to_v2(chosen_v1))
+        v2.apply_action(v1_action_to_v2(chosen_v1))
 
         step += 1
 
     assert v2.finished, f"Seed {seed}: v2 game not finished when v1 is DONE"
 
 
+def _replay_v1_as_v2(seed: int) -> None:
+    """Play a v1 game, replay its actions on v2, and compare results."""
+    random.seed(seed)
+    v1 = MarjaPussi(["Alice", "Bob", "Charlie", "Diana"], log=False)
+
+    rng = random.Random(seed + 1000)
+    while v1.phase != "DONE":
+        action = rng.choice(v1.legal_actions())
+        v1.act_action(action)
+
+    info = v1.end_info()
+    names = ("Alice", "Bob", "Charlie", "Diana")
+    v2_cards = tuple(
+        [Card.model_validate(c) for c in info["cards"][name]] for name in names
+    )
+
+    v2 = MarjapussiGame(
+        player_names=names,
+        start_cards=v2_cards,
+        time_fn=lambda: "test",
+    )
+    for i in range(4):
+        v2.apply_action(GameAction(action_type="Start", player=PlaceAtTable(root=i)))
+
+    for action in v1_actions_to_v2(info["actions"]):
+        v2.apply_action(action)
+
+    assert v2.finished
+    v2_info = v2.to_finished_info()
+
+    assert v2_info.game_value.root == info["game_value"]
+    assert v2_info.schwarz_game == info["schwarz_game"]
+
+    if info["playing_player"] is None:
+        assert v2_info.no_one_played
+    else:
+        assert not v2_info.no_one_played
+
+    v1_tricks = [t for t in info["tricks"] if t]
+    assert len(v2_info.tricks) == len(v1_tricks)
+    for v1_trick, v2_trick in zip(v1_tricks, v2_info.tricks, strict=True):
+        v1_cards = [Card.model_validate(c) for c in v1_trick]
+        assert list(v2_trick.cards) == v1_cards
+
+    if info["passed_cards"]["forth"]:
+        assert v2_info.passed_cards is not None
+        v1_forth = {Card.model_validate(c) for c in info["passed_cards"]["forth"]}
+        v1_back = {Card.model_validate(c) for c in info["passed_cards"]["back"]}
+        assert set(v2_info.passed_cards[0]) == v1_forth
+        assert set(v2_info.passed_cards[1]) == v1_back
+    else:
+        assert v2_info.passed_cards is None
+
+
 class TestLegalActionParity:
     @pytest.mark.parametrize("seed", range(100))
     def test_parity(self, seed: int) -> None:
         _play_and_compare(seed)
+
+
+class TestV1ToV2Replay:
+    @pytest.mark.parametrize("seed", range(100))
+    def test_replay_v1_as_v2(self, seed: int) -> None:
+        _replay_v1_as_v2(seed)
