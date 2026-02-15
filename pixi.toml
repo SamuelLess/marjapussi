@@ -16,11 +16,16 @@ marjapussi = { path = ".", editable = true }
 [feature.dev.pypi-dependencies]
 pytest = "*"
 ruff = "*"
+build = "*"
+twine = "*"
 
 [feature.dev.tasks]
 test = "pytest tests/ -v"
 lefthook-install = "lefthook install"
 lefthook-run = "lefthook run pre-commit --all-files"
+build = "python -m build"
+publish-test = { cmd = "twine upload --repository testpypi dist/*", depends-on = ["build"] }
+publish = { cmd = "twine upload dist/*", depends-on = ["build"] }
 
 [environments]
 default = { features = ["dev"], solve-group = "default" }

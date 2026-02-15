@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from marjapussi.v2.rules import (
+from marjapussi.rules import (
     allowed_cards,
     allowed_first_trick,
     card_points,
@@ -12,7 +12,7 @@ from marjapussi.v2.rules import (
     trick_points,
     trick_winner,
 )
-from marjapussi.v2.types import Card, PlaceAtTable, Suit
+from marjapussi.types import Card, PlaceAtTable, Suit
 
 
 def _c(s: str) -> Card:

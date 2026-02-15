@@ -4,8 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from marjapussi.v2.actions import ActionType
-from marjapussi.v2.types import PlaceAtTable, Suit
+from marjapussi.actions import ActionType
+from marjapussi.types import PlaceAtTable, Suit
 
 
 class CallbackNewTrump(BaseModel):

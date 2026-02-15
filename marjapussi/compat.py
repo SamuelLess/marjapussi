@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from marjapussi.v2.actions import (
+from marjapussi.actions import (
     ActionAnnounceTrump,
     ActionAnswer,
     ActionCardPlayed,
@@ -12,9 +12,9 @@ from marjapussi.v2.actions import (
     AnswerYesPair,
     QuestionYourHalf,
 )
-from marjapussi.v2.events import GameAction
-from marjapussi.v2.rules import sorted_cards
-from marjapussi.v2.types import Card, PlaceAtTable, Suit
+from marjapussi.events import GameAction
+from marjapussi.rules import sorted_cards
+from marjapussi.types import Card, PlaceAtTable, Suit
 
 SUIT_FROM_CHAR: dict[str, Suit] = {
     "r": Suit.Red,

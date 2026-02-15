@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from marjapussi.v2.types import Card, Suit
+from marjapussi.types import Card, Suit
 
 
 class QuestionYourHalf(BaseModel):

@@ -5,7 +5,7 @@ import random
 
 class TestV1GameLoop:
     def test_full_game(self) -> None:
-        from marjapussi.game import MarjaPussi
+        from marjapussi.legacy.game import MarjaPussi
 
         rng = random.Random(42)
         game = MarjaPussi(
@@ -20,7 +20,7 @@ class TestV1GameLoop:
             assert result is True
 
     def test_end_info_structure(self) -> None:
-        from marjapussi.game import MarjaPussi
+        from marjapussi.legacy.game import MarjaPussi
 
         rng = random.Random(99)
         game = MarjaPussi(["A", "B", "C", "D"], log=False)
@@ -38,7 +38,7 @@ class TestV1GameLoop:
         assert len(info["players"]) == 4
 
     def test_state_dict_structure(self) -> None:
-        from marjapussi.game import MarjaPussi
+        from marjapussi.legacy.game import MarjaPussi
 
         game = MarjaPussi(["A", "B", "C", "D"], log=False)
         state = game.state_dict()

@@ -4,12 +4,12 @@ import random
 
 import pytest
 
-from marjapussi.game import MarjaPussi
-from marjapussi.v2.actions import ActionPass
-from marjapussi.v2.compat import v1_action_to_v2, v1_actions_to_v2, v2_action_to_v1
-from marjapussi.v2.events import GameAction
-from marjapussi.v2.game import MarjapussiGame
-from marjapussi.v2.types import Card, PlaceAtTable
+from marjapussi.actions import ActionPass
+from marjapussi.compat import v1_action_to_v2, v1_actions_to_v2, v2_action_to_v1
+from marjapussi.events import GameAction
+from marjapussi.game import MarjapussiGame
+from marjapussi.legacy.game import MarjaPussi
+from marjapussi.types import Card, PlaceAtTable
 
 
 def _play_and_compare(seed: int) -> None:

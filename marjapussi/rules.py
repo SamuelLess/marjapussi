@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from marjapussi.v2.types import Card, PlaceAtTable, Suit, Value
+from marjapussi.types import Card, PlaceAtTable, Suit, Value
 
 VALUE_ORDER: list[Value] = list(Value)
 

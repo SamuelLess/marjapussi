@@ -5,9 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from marjapussi.v2.actions import ActionType
-from marjapussi.v2.events import GameAction, GameEvent, GameEventPlayer
-from marjapussi.v2.types import Card, PlaceAtTable, Points, Suit
+from marjapussi.actions import ActionType
+from marjapussi.events import GameAction, GameEvent, GameEventPlayer
+from marjapussi.types import Card, PlaceAtTable, Points, Suit
 
 
 class FinishedTrick(BaseModel):

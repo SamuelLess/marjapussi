@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from marjapussi.v2.state import GameFinishedInfo
-from marjapussi.v2.types import (
+from marjapussi.state import GameFinishedInfo
+from marjapussi.types import (
     Card,
     PlaceAtTable,
     Points,

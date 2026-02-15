@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from marjapussi.v2.state import Game
+from marjapussi.state import Game
 
 
 class SeriesSettings(BaseModel):
