@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from marjapussi.v2.models import GameFinishedInfo
+from marjapussi.v2.state import GameFinishedInfo
 from marjapussi.v2.types import (
     Card,
     PlaceAtTable,

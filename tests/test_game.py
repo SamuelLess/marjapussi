@@ -6,13 +6,11 @@ from pathlib import Path
 
 import pytest
 
+from marjapussi.v2.actions import ActionCardPlayed
+from marjapussi.v2.events import GameAction
 from marjapussi.v2.game import MarjapussiGame
-from marjapussi.v2.models import (
-    ActionCardPlayed,
-    GameAction,
-    GameFinishedInfo,
-)
 from marjapussi.v2.rules import deck, sorted_cards
+from marjapussi.v2.state import GameFinishedInfo
 from marjapussi.v2.types import Card, PlaceAtTable
 
 EXAMPLES_PATH = Path(__file__).resolve().parent / "examples.json"

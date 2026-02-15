@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 from itertools import combinations
 
-from marjapussi.v2.models import (
+from marjapussi.v2.actions import (
     ActionAnnounceTrump,
     ActionAnswer,
     ActionCardPlayed,
@@ -15,18 +15,16 @@ from marjapussi.v2.models import (
     AnswerNoHalf,
     AnswerYesHalf,
     AnswerYesPair,
+    QuestionYourHalf,
+)
+from marjapussi.v2.events import (
     CallbackNewTrump,
     CallbackNoHalf,
     CallbackOnlyHalf,
     CallbackStillTrump,
-    FinishedTrick,
     GameAction,
     GameCallback,
     GameEvent,
-    GameFinishedInfo,
-    GameMetaInfo,
-    GamePhaseAnsweringHalf,
-    QuestionYourHalf,
 )
 from marjapussi.v2.player import PlayerState
 from marjapussi.v2.rules import (
@@ -36,6 +34,12 @@ from marjapussi.v2.rules import (
     sorted_cards,
     trick_points,
     trick_winner,
+)
+from marjapussi.v2.state import (
+    FinishedTrick,
+    GameFinishedInfo,
+    GameMetaInfo,
+    GamePhaseAnsweringHalf,
 )
 from marjapussi.v2.types import Card, PlaceAtTable, Points, Suit
 
@@ -95,8 +99,6 @@ class MarjapussiGame:
         self._all_tricks: list[FinishedTrick] = []
         self._first_trick_done: bool = False
 
-    # ── properties ───────────────────────────────────────────────
-
     @property
     def actions(self) -> tuple[GameAction, ...]:
         return tuple(self._actions)
@@ -108,8 +110,6 @@ class MarjapussiGame:
     @property
     def finished(self) -> bool:
         return self._phase == "Ended"
-
-    # ── public API ───────────────────────────────────────────────
 
     def legal_actions(self) -> list[GameAction]:
         phase = self._phase
@@ -155,6 +155,7 @@ class MarjapussiGame:
         *,
         time_fn: Callable[[], str] = _default_time,
     ) -> MarjapussiGame:
+        """Reconstruct a game by re-applying a sequence of actions."""
         game = MarjapussiGame(
             player_names=meta.player_names,
             start_cards=meta.player_start_cards,
@@ -167,6 +168,7 @@ class MarjapussiGame:
         return game
 
     def to_finished_info(self) -> GameFinishedInfo:
+        """Build a summary with scores, tricks, and outcome of the completed game."""
         if not self.finished:
             msg = "Game has not ended"
             raise ValueError(msg)
@@ -204,9 +206,8 @@ class MarjapussiGame:
             all_events=list(self._events),
         )
 
-    # ── action dispatcher ────────────────────────────────────────
-
     def _apply_to_state(self, action: GameAction) -> GameCallback | None:
+        """Dispatch an action to the matching handler and return any callback."""
         at = action.action_type
         if at == "Start":
             return self._apply_start(action.player)
@@ -226,8 +227,6 @@ class MarjapussiGame:
             return self._apply_answer(action.player, at.Answer)
         msg = f"Unhandled action type: {at}"
         raise ValueError(msg)
-
-    # ── action handlers ──────────────────────────────────────────
 
     def _apply_start(self, player: PlaceAtTable) -> GameCallback | None:
         self._players_started.add(player.root)
@@ -398,9 +397,8 @@ class MarjapussiGame:
         self._phase = "Trick"
         return callback
 
-    # ── bidding helper ───────────────────────────────────────────
-
     def _advance_bidding(self) -> None:
+        """Move turn to the next active bidder or resolve the bidding phase."""
         still = [p for p in self._players if p.still_bidding]
         n = len(still)
         if n > 1 or (n == 1 and self._game_value == self.START_VALUE):
@@ -421,8 +419,6 @@ class MarjapussiGame:
             self._no_one_played = False
             self._player_at_turn = winner.place.partner()
             self._phase = "PassingForth"
-
-    # ── legal action generators ──────────────────────────────────
 
     def _legal_waiting(self) -> list[GameAction]:
         return [
