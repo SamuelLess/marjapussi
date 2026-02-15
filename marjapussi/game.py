@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from itertools import combinations
@@ -31,6 +32,7 @@ from marjapussi.rules import (
     allowed_cards,
     contains_half,
     contains_pair,
+    deck,
     sorted_cards,
     trick_points,
     trick_winner,
@@ -56,11 +58,18 @@ class MarjapussiGame:
     def __init__(
         self,
         player_names: tuple[str, str, str, str],
-        start_cards: tuple[list[Card], list[Card], list[Card], list[Card]],
+        start_cards: tuple[list[Card], list[Card], list[Card], list[Card]]
+        | None = None,
         *,
         name: str = "",
         time_fn: Callable[[], str] = _default_time,
     ) -> None:
+        if start_cards is None:
+            cards = deck()
+            random.shuffle(cards)
+            start_cards = tuple(
+                sorted_cards(cards[i * 9 : (i + 1) * 9]) for i in range(4)
+            )
         self._time_fn = time_fn
         now = time_fn()
         self._meta = GameMetaInfo(
