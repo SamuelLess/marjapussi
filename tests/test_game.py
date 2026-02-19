@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from marjapussi.actions import ActionCardPlayed
-from marjapussi.events import GameAction
+from marjapussi.actions import ActionCardPlayed, ActionNewBid, ActionPass
+from marjapussi.events import GameAction, GameEvent
 from marjapussi.game import MarjapussiGame
 from marjapussi.rules import deck, sorted_cards
 from marjapussi.state import GameFinishedInfo
@@ -166,6 +166,63 @@ class TestIllegalAction:
                     player=PlaceAtTable(root=0),
                 )
             )
+
+
+class TestPlayerViews:
+    def test_last_event_is_hidden_for_other_party_on_pass(self) -> None:
+        names, cards = _deal()
+        game = MarjapussiGame(
+            player_names=names,
+            start_cards=cards,
+            time_fn=_fixed_time,
+        )
+
+        for i in range(4):
+            game.apply_action(
+                GameAction(action_type="Start", player=PlaceAtTable(root=i))
+            )
+
+        game.apply_action(
+            GameAction(
+                action_type=ActionNewBid(NewBid=120),
+                player=PlaceAtTable(root=0),
+            )
+        )
+        game.apply_action(
+            GameAction(action_type="StopBidding", player=PlaceAtTable(root=1))
+        )
+        game.apply_action(
+            GameAction(action_type="StopBidding", player=PlaceAtTable(root=2))
+        )
+        game.apply_action(
+            GameAction(action_type="StopBidding", player=PlaceAtTable(root=3))
+        )
+
+        pass_action = next(
+            a for a in game.legal_actions() if isinstance(a.action_type, ActionPass)
+        )
+        game.apply_action(pass_action)
+
+        views = game.to_player_views()
+
+        assert isinstance(views[0].last_event, GameEvent)
+        assert isinstance(views[2].last_event, GameEvent)
+        assert views[1].last_event == "HiddenEvent"
+        assert views[3].last_event == "HiddenEvent"
+
+    def test_last_non_pass_event_is_public_for_all_players(self) -> None:
+        names, cards = _deal()
+        game = MarjapussiGame(
+            player_names=names,
+            start_cards=cards,
+            time_fn=_fixed_time,
+        )
+
+        game.apply_action(GameAction(action_type="Start", player=PlaceAtTable(root=0)))
+        views = game.to_player_views()
+
+        for i in range(4):
+            assert isinstance(views[i].last_event, GameEvent)
 
 
 class TestExamplesReplay:

@@ -26,6 +26,7 @@ from marjapussi.events import (
     GameAction,
     GameCallback,
     GameEvent,
+    GameEventPlayer,
 )
 from marjapussi.player import PlayerState
 from marjapussi.rules import (
@@ -40,6 +41,7 @@ from marjapussi.rules import (
 from marjapussi.state import (
     FinishedTrick,
     GameFinishedInfo,
+    GameInfoPlayer,
     GameMetaInfo,
     GamePhaseAnsweringHalf,
 )
@@ -142,6 +144,57 @@ class MarjapussiGame:
             return self._legal_answering_half()
         return []
 
+    def to_player_views(
+        self,
+    ) -> tuple[GameInfoPlayer, GameInfoPlayer, GameInfoPlayer, GameInfoPlayer]:
+        legal_actions = self.legal_actions()
+        latest_event = self._events[-1] if self._events else None
+        players_pressed_start = [
+            self._players[seat].name for seat in sorted(self._players_started)
+        ]
+        last_trick = self._all_tricks[-1] if self._all_tricks else None
+        player_at_turn_name = self._players[self._player_at_turn.root].name
+
+        def _last_event_for(seat: PlaceAtTable) -> GameEventPlayer | None:
+            if latest_event is None:
+                return None
+            action_type = latest_event.last_action.action_type
+            if isinstance(action_type, ActionPass):
+                actor = latest_event.last_action.player
+                if seat != actor and seat != actor.partner():
+                    return "HiddenEvent"
+            return latest_event
+
+        def _view_for(seat: PlaceAtTable) -> GameInfoPlayer:
+            perspective = (seat, seat.next(), seat.partner(), seat.prev())
+            return GameInfoPlayer(
+                meta_info=self._meta,
+                players_pressed_start=players_pressed_start,
+                players_from_perspective=tuple(
+                    self._players[p.root].name for p in perspective
+                ),
+                player_at_turn=player_at_turn_name,
+                own_cards=list(self._players[seat.root].hand),
+                players_cards_number_perspective=tuple(
+                    len(self._players[p.root].hand) for p in perspective
+                ),
+                game_phase=self._phase,
+                bidding_history=list(self._bidding_history),
+                current_trick=list(self._current_trick),
+                last_trick=last_trick,
+                last_event=_last_event_for(seat),
+                legal_actions=[
+                    action for action in legal_actions if action.player == seat
+                ],
+            )
+
+        return (
+            _view_for(PlaceAtTable(root=0)),
+            _view_for(PlaceAtTable(root=1)),
+            _view_for(PlaceAtTable(root=2)),
+            _view_for(PlaceAtTable(root=3)),
+        )
+
     def apply_action(self, action: GameAction) -> None:
         if action not in self.legal_actions():
             msg = f"Illegal action {action} in phase {self._phase}"
@@ -179,8 +232,7 @@ class MarjapussiGame:
     def to_finished_info(self) -> GameFinishedInfo:
         """Build a summary with scores, tricks, and outcome of the completed game."""
         if not self.finished:
-            msg = "Game has not ended"
-            raise ValueError(msg)
+            raise ValueError("Game has not ended")
 
         won = None
         playing_party = None

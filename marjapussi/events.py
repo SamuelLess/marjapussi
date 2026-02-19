@@ -39,8 +39,4 @@ class GameEvent(BaseModel):
     time: str
 
 
-class GameEventPublic(BaseModel):
-    PublicEvent: GameEvent
-
-
-GameEventPlayer = Literal["HiddenEvent"] | GameEventPublic
+GameEventPlayer = Literal["HiddenEvent"] | GameEvent
