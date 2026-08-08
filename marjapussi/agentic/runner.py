@@ -36,4 +36,4 @@ def _next_action(
     if action not in view.legal_actions:
         msg = f"Agent at seat {seat.root} returned illegal action {action}"
         raise ValueError(msg)
-    return action
+    return action.model_copy(deep=True)

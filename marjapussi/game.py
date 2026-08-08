@@ -167,8 +167,16 @@ class MarjapussiGame:
 
         def _view_for(seat: PlaceAtTable) -> GameInfoPlayer:
             perspective = (seat, seat.next(), seat.partner(), seat.prev())
+            meta = self._meta.model_copy(
+                update={
+                    "player_start_cards": tuple(
+                        list(cards) if i == seat.root else []
+                        for i, cards in enumerate(self._meta.player_start_cards)
+                    )
+                }
+            )
             return GameInfoPlayer(
-                meta_info=self._meta,
+                meta_info=meta,
                 players_pressed_start=players_pressed_start,
                 players_from_perspective=tuple(
                     self._players[p.root].name for p in perspective
@@ -186,7 +194,7 @@ class MarjapussiGame:
                 legal_actions=[
                     action for action in legal_actions if action.player == seat
                 ],
-            )
+            ).model_copy(deep=True)
 
         return (
             _view_for(PlaceAtTable(root=0)),

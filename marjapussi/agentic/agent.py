@@ -8,6 +8,8 @@ from marjapussi.types import PlaceAtTable
 
 
 class Agent(ABC):
+    """Plays one seat; the runner sets place before the first observe call."""
+
     place: PlaceAtTable
 
     @abstractmethod
