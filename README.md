@@ -95,6 +95,12 @@ pixi install
 pixi run test
 ```
 
+### Releasing
+
+Releases are published to PyPI automatically by CI: bump `version` in
+`pyproject.toml` and push to (or merge into) `main`. Pushes without a version
+bump run tests and build but skip the upload.
+
 ## Contributing
 
 Pull requests and feedback are welcome. If you think something is wrong or could be improved, feel free to open an issue or reach out.

@@ -6,6 +6,9 @@ main.py
 .pixi/
 .*/
 !/.gitignore
+!/.github/
+
+arena_results/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

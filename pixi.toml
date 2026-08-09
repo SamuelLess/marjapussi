@@ -1,6 +1,5 @@
 [workspace]
 name = "marjapussi"
-version = "1.1.0"
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "osx-64", "linux-64"]
 
