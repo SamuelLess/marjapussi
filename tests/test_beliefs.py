@@ -14,7 +14,7 @@ from marjapussi.agentic.beliefs import BeliefAgent, BeliefState
 from marjapussi.agentic.runner import play_game
 from marjapussi.events import GameAction
 from marjapussi.game import MarjapussiGame
-from marjapussi.rules import deck, sorted_cards
+from marjapussi.rules import deck, high_card, sorted_cards
 from marjapussi.state import GameInfoPlayer
 from marjapussi.types import Card, PlaceAtTable, Value
 
@@ -59,7 +59,10 @@ def _drive_game(seed: int) -> dict[str, int]:
     beliefs = [BeliefState() for _ in range(4)]
     for belief, view in zip(beliefs, game.to_player_views(), strict=True):
         belief.update(view)
-    counters = {"pair_known": 0, "off_suit": 0, "hidden_pass": 0}
+    counters = dict.fromkeys(
+        ("pair_known", "off_suit", "hidden_pass", "must_beat_lead", "must_beat_trump"),
+        0,
+    )
     rng = random.Random(seed + 1000)
 
     while not game.finished:
@@ -100,6 +103,20 @@ def _drive_game(seed: int) -> dict[str, int]:
                 assert not any(
                     c.suit == lead for c in belief.possible_cards(action.player)
                 )
+        if isinstance(action_type, ActionCardPlayed) and pre_trick:
+            card = action_type.CardPlayed
+            trump = beliefs[0].trump
+            lead = pre_trick[0].suit
+            forced_pool = card.suit == lead or card.suit == trump
+            if forced_pool and card != high_card([*pre_trick, card], trump=trump):
+                key = "must_beat_lead" if card.suit == lead else "must_beat_trump"
+                counters[key] += 1
+                for belief in beliefs:
+                    assert not any(
+                        c.suit == card.suit
+                        and c == high_card([*pre_trick, c], trump=trump)
+                        for c in belief.possible_cards(action.player)
+                    )
 
     for belief in beliefs:
         for seat in range(4):
@@ -113,10 +130,10 @@ class TestBeliefState:
         _drive_game(seed)
 
     def test_inference_paths_covered(self) -> None:
-        totals = {"pair_known": 0, "off_suit": 0, "hidden_pass": 0}
+        totals: dict[str, int] = {}
         for seed in range(12):
             for key, count in _drive_game(seed).items():
-                totals[key] += count
+                totals[key] = totals.get(key, 0) + count
         assert all(count > 0 for count in totals.values()), totals
 
 
