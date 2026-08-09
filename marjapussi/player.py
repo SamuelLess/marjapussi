@@ -1,50 +1,41 @@
-import marjapussi.utils as utils
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+from marjapussi.rules import (
+    CARD_POINTS,
+    LAST_TRICK_BONUS,
+    sorted_cards,
+    suit_points,
+)
+from marjapussi.types import Card, PlaceAtTable, Suit
 
 
-class Player():
-    """Implements a player of the MarjaPussi game."""
+class PlayerState(BaseModel):
+    place: PlaceAtTable
+    name: str
+    hand: list[Card]
+    tricks_won: list[list[Card]] = Field(default_factory=list)
+    points: int = 0
+    still_bidding: bool = True
+    trump_calls: list[Suit] = Field(default_factory=list)
+    asking_level: int = 0
 
-    def __init__(self, name: str, number: int, points: dict) -> None:
-        self.name = name
-        self.number = number
-        self.points = points #defined by rules of the game
-        self.partner: Player = None
-        self.next_player: Player = None
-        self.asking = 0  # 0 -> my; 1 -> yours; 2 -> ours
-        self.cards = []  # players card
-        self.still_prov = True
-        self.prov_val = 0  # highest value said
-        self.tricks = []  # all tricks self made
-        self.sup_calls = []  # all colors called sup by self
-        self.points_made = 0  # sum of points of self
+    def give_card(self, card: Card) -> None:
+        self.hand.append(card)
+        self.hand = sorted_cards(self.hand)
 
-    def take_trick(self, trick, last=False) -> None:
-        self.tricks.append(trick)
-        self.points_made += sum([self.points[card[2]]
-                                for card in trick]) + (self.points["L"] if last else 0)
+    def remove_card(self, card: Card) -> None:
+        self.hand = [c for c in self.hand if c != card]
 
-    def call_sup(self, col) -> None:
-        # points go to player calling or asking
-        if col in self.sup_calls:
+    def take_trick(self, trick: list[Card], *, last: bool = False) -> None:
+        self.tricks_won.append(trick)
+        self.points += sum(CARD_POINTS[c.value] for c in trick)
+        if last:
+            self.points += LAST_TRICK_BONUS
+
+    def call_trump(self, suit: Suit) -> None:
+        if suit in self.trump_calls:
             return
-        self.sup_calls.append(col)
-        self.points_made += self.points[col]
-
-    def give_card(self, c: str) -> None:
-        """Gives the player an additional card."""
-        self.cards.append(c)
-        # ? sorting doesn't need to be here but is convenient
-        self.cards = utils.sorted_cards(self.cards)
-
-    def take_card(self, c: str) -> None:
-        self.cards = list(set(self.cards) - {c, })
-        self.cards = utils.sorted_cards(self.cards)
-
-    def set_partner(self, partner) -> None:
-        self.partner: Player = partner
-
-    def set_next_player(self, next_player) -> None:
-        self.next_player = next_player
-
-    def player_info(self) -> dict:
-        return {'name': self.name, 'cards': self.cards}
+        self.trump_calls.append(suit)
+        self.points += suit_points(suit)
