@@ -65,6 +65,10 @@
 - Keep functions small and composable
 - Prefer composition over inheritance
 
+### Git & PRs
+
+- Every commit title and PR title must follow the Conventional Commits format (e.g. `feat: add belief tracking`, `fix(engine): correct trick scoring`)
+
 ### Testing
 
 - Use pytest
